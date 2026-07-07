@@ -566,3 +566,16 @@ Three measured lessons from making it work:
 ```bash
 pytest
 ```
+
+## Provenance
+
+This project was developed by Christopher Gardner in interactive research
+sessions with Claude (Anthropic) — human-directed design and adjudication,
+AI-assisted implementation and experimentation. The paper
+([paper/strata.tex](paper/strata.tex)) discloses the collaboration; the
+pre-registration ([paper/preregistration.md](paper/preregistration.md))
+and the falsification record inside the paper document the process,
+including the mechanisms that failed their own pre-registered tests and
+were redesigned. The repo's claims are deliberately scoped: candidate
+decomposition at prototype scale, not conquest — see the paper's
+limitations section before citing any headline number.

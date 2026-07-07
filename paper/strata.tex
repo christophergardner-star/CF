@@ -474,12 +474,16 @@ condition}---diversity scaling intact at twice the task count---with
 retention flat with age (best row: 0.306 oldest vs.\ 0.310 newest third)
 and forward transfer of 1.4--1.6$\times$. Adaptive bands slightly
 outperformed static thresholds after the fix (e.g., fixed encoder: 0.306
-vs.\ 0.334 old-task retention). One honest caveat: on this rank-3 bench at
-48 tasks the fixed encoder is again the best overall row---the learnable
-conditions ran capacity-limited (576 total symbols against a 128-unit
-dictionary cap), so the flagship learned-dictionary advantage of
-Table~\ref{tab:longbench} should not be assumed to extend to regimes where
-allocation demand far exceeds dictionary capacity.
+vs.\ 0.334 old-task retention). One honest finding, settled by a
+pre-committed reading rule (any ambiguous outcome at under-demand capacity
+mandates a rerun clearing demand before conclusions): at dictionary
+capacities of 128, 512, and 768 units---the last comfortably clearing the
+576-symbol allocation demand---the fixed encoder remains the best overall
+row on rank-3 at 48 tasks. The gap is therefore \textbf{capacity-%
+independent}: the learned-dictionary advantage of
+Table~\ref{tab:longbench} is established on isotropic residuals and does
+not extend to low-rank residual structure at this scale. Localizing why is
+open work.
 
 \subsection{Depth: a two-layer stack}
 \label{sec:depth}

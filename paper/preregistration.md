@@ -124,3 +124,49 @@ aggregation choices can silently move the line. Fixed now, adversarially:
 
 This amendment fixes measurement procedure only; it does not alter any
 threshold value or the pass/fail logic of the registered criteria.
+
+---
+
+## Amendment 2 (2026-07-07, before any external run): the overlap measure
+
+Registration catch-up disclosure: the probe instrument (`probes/`)
+implemented this corrected measure in the repository's initial commit
+(`07a7a04`); this registration text should have accompanied it in the same
+change and lags it. The lag is disclosed rather than reordered.
+
+**1. Measure.** Building the instrument surfaced a first-principles defect
+in the registered basis measure, prior to any external data: *paired*
+linear CKA between two different tasks' samples has an arbitrary sample
+pairing, under which its expectation reduces to a chance floor
+(approximately sqrt(p q)/n for feature widths p, q and sample count n)
+**regardless of true subspace alignment**. The registered quantity
+therefore carried no signal about representational overlap, and no
+threshold on it was ever meaningful. The registered measure is corrected
+to the pairing-free form --- **covariance alignment**:
+
+    A(X, Y) = tr(S_X S_Y) / (||S_X||_F ||S_Y||_F)
+
+over centered per-layer feature covariances, which is 0 for activity
+confined to disjoint feature subspaces, 1 for identical second-order
+structure, and invariant to sample pairing and count mismatch. This
+argument references no architecture under test.
+
+**2. Reporting.** The instrument must report, for every layer in the
+architecturally-enumerated set: the alignment value, an empirical null
+floor (alignment after destroying feature correspondence by column
+permutation), and a **vacuous-layer flag** wherever the null floor reaches
+the registered bar --- at such layers the exclusion cannot pass and its
+verdict must not be read as evidence in either direction. A further
+documented property: the measure is scale-invariant, so layers fed by
+shared trained heads will genuinely align across tasks; this makes the
+basis exclusion conservative (hard to falsify the trichotomy by accident),
+which is the acceptable direction of lean.
+
+**3. Threshold provenance.** The 0.1 threshold is retained unchanged, on
+procedural grounds (no threshold edits by the hand that knows which way it
+wants the criterion to fall). Its calibration was established against the
+superseded paired measure and is therefore **unverified against the
+covariance-alignment scale**; the per-layer null floor of part 2 is the
+stringency reference against which 0.1's meaningfulness must be judged at
+run time, layer by layer. Retention of the number is continuity of
+procedure, not evidence of calibration.
