@@ -1,0 +1,721 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{url}
+\usepackage{hyperref}
+\usepackage{xcolor}
+
+\newcommand{\strata}{STRATA}
+\newcommand{\code}[1]{\texttt{#1}}
+
+\title{\strata: Catastrophic Forgetting as an Architectural Default,\\
+a Measured Failure Taxonomy, and a Replay-Free Resolution\\
+at Prototype Scale}
+
+\author{Christopher~Gardner\thanks{Correspondence:
+christhechef35@gmail.com. Architecture design, implementation and
+experiments were carried out in an interactive research session with
+Claude (Anthropic); all results reported here are reproducible from the
+accompanying code.}}
+
+\date{July 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Catastrophic forgetting is conventionally treated as a training pathology to
+be suppressed with regularizers or replay. We argue, and demonstrate at
+prototype scale, that it is instead the \emph{default consequence} of three
+architectural decisions most networks make implicitly: writing new
+information into the same substrate as old information, at the same
+timescale, in a correlated basis. We present \strata\ (Sparse Tiered Routing
+with Anchored Two-timescale Adaptation), a continual-learning architecture
+that makes all three decisions differently, using only local learning rules:
+no backpropagation through time, no task labels, and no replay buffers of
+raw data. Seven composable mechanisms---sparse hysteretic routing,
+atomic feature allocation, a fast/slow synaptic split, multi-timescale
+cascade consolidation, maturity-gated readouts, predictive-residual coding,
+and inference-side decorrelation with impermanent consolidation---are each
+pinned to a specific, empirically measured failure mode. On sequential
+task benches with forced cross-task interference, \strata\ exhibits flat
+retention over 24--48 sequential tasks, capacity growth that tracks task
+\emph{diversity} rather than task count (16 columns for 48 tasks across 16
+families), up to $2.6\times$ forward transfer, and graceful power-law
+degradation; with representation learning enabled, the learned dictionary
+ultimately \emph{outperforms} a fixed random expansion on the primary
+bench.
+We further embed the architecture as a metabolically constrained organ in an
+artificial organism, where learning generates heat that throttles its own
+plasticity, and demonstrate a two-layer stack in which event-driven ascent
+and bounded top-down priors reduce regime re-orientation transients by
+15--31\%; the same experiments yield a measured design constraint for
+hierarchy---abstraction density at level $N{+}1$ requires geometrically
+more experience than level $N$ can supply per unit time. Alongside the
+positive results we report a taxonomy of failure modes---absorption, code
+drift, correlation inheritance, capacity exhaustion, orphaned bindings,
+threshold collapse, and prior capture---each discovered by measurement,
+several of which recurred at higher levels of the hierarchy in
+level-specific form, and a falsification record in which every mechanism
+was tested against a pre-registered failure criterion. We state the scope
+limits plainly: all results are at toy scale on self-designed benches, and
+composition under depth beyond two layers, external benchmarks, and
+order-of-magnitude scaling remain open.
+\end{abstract}
+
+\section{Introduction}
+
+This paper's central claim is that ``catastrophic forgetting'' is not one
+phenomenon but several: an umbrella term for a set of distinct,
+individually measurable failure modes---\emph{absorption} of an old
+module's identity by new data, \emph{code drift} invalidating downstream
+bindings, \emph{correlation inheritance} in learned features,
+\emph{capacity exhaustion} of finite dictionaries, and \emph{orphaned
+episodic bindings} under representation change---each of which can be
+detected by instrumentation, prevented by a specific mechanism, and
+unit-tested. We present this as a \emph{candidate} decomposition: it is
+internally predictive within the systems studied here (\S\ref{sec:falsification}),
+and whether it is the structure of the phenomenon at large---or the first
+chart of it---is precisely what evaluation on benchmarks we did not design
+must decide. What the decomposition does establish is that, in the systems
+studied, forgetting is the default consequence of three architectural
+decisions most networks make implicitly: writing new information (i) into
+the same physical substrate as old information, (ii) at a single timescale
+of plasticity, and (iii) in a representational basis whose components are
+correlated across experiences.
+
+Modern neural networks learn well from stationary, shuffled data and forget
+catastrophically from sequential, non-stationary data
+\cite{french1999,mccloskey1989}. The dominant remedies---elastic
+regularization of important weights \cite{kirkpatrick2017,zenke2017},
+replay of stored or generated past data \cite{shin2017}, or frozen
+task-specific expansion \cite{rusu2016}---treat forgetting as a defect of
+the \emph{training procedure}. Under the decomposition above they are
+partial by construction: a loss term attacks only the timescale condition,
+and replay converts the non-stationary problem back to a stationary one at
+the cost of storing data, while the interference both penalize is
+manufactured upstream of the loss.
+
+We test the hypothesis constructively. \strata\ is a small,
+fully-instrumented continual-learning system in which each of the three
+decisions above is made differently, by mechanisms with independent support
+in theoretical neuroscience: complementary learning systems
+\cite{mcclelland1995}, cascade models of synaptic consolidation
+\cite{fusi2005,benna2016}, sparse expansion coding \cite{olshausen1996,
+dasgupta2017}, predictive coding \cite{rao1999}, and reservoir computing
+\cite{maass2002,jaeger2001}. The contribution is not any single mechanism
+---most have antecedents---but (a)~evidence that they \emph{compose} into
+one working system under strict constraints (local rules only, no replay,
+no task labels, bounded state), and (b)~a \emph{measured failure taxonomy}:
+a catalogue of the specific ways such systems break, each observed in
+instrumented experiments, each answered by a named mechanism, and several
+observed to recur at higher levels of a hierarchy in new costume. We
+believe the taxonomy is the most transferable artifact, because these
+failures will confront any architecture attacking this problem at any
+scale.
+
+\paragraph{Contributions.}
+\begin{enumerate}
+\item An architectural account of catastrophic forgetting (substrate,
+timescale, basis) and a seven-mechanism blueprint that operationalizes it
+with purely local learning rules (\S\ref{sec:architecture}).
+\item A measured failure taxonomy for replay-free continual learning
+(\S\ref{sec:taxonomy}), including three failure modes we have not seen
+named elsewhere: \emph{absorption} (identity capture without weight
+erasure), \emph{correlation inheritance} in learned dictionaries, and
+\emph{orphaned episodic bindings} under representation drift.
+\item Benchmarks with \emph{forced} interference (shared vocabulary,
+conflicting successors), motivated by the measured observation that
+disjoint-task benches are jointly fittable and produce no forgetting even
+in unprotected baselines (\S\ref{sec:benches}).
+\item Empirical results: flat retention across 24 sequential tasks;
+capacity growth tracking diversity, not task count; $2.6\times$ forward
+transfer; and a learned dictionary that ultimately beats a fixed random
+expansion under continual-learning constraints (\S\ref{sec:results}).
+\item A metabolic embedding in which synaptic work is paid for in a
+conserved energy economy, producing an emergent learn/overheat/rest cadence
+and reproducing a known saturation pathology of the host system
+(\S\ref{sec:thermo}).
+\item A two-layer stack with event-driven ascent and bounded top-down
+priors, reducing regime re-orientation transients by 15--31\%, together
+with negative results delineating when hierarchy does \emph{not} pay
+(\S\ref{sec:depth}).
+\end{enumerate}
+
+\section{Forgetting as an Architectural Default}
+\label{sec:principles}
+
+Consider online learning of a predictive map from a non-stationary stream.
+Interference between a new experience and consolidated knowledge requires
+three simultaneous conditions: the update must touch \emph{the same
+parameters} (substrate overlap), it must move them \emph{faster than they
+can be protected} (timescale collision), and the representations involved
+must \emph{overlap} (basis correlation). Standard architectures satisfy all
+three by default: dense representations make every parameter serve every
+input; a single learning rate makes protection and adaptation the same
+knob; and learned features inherit whatever correlations exist in the
+input distribution. Regularization methods attack the middle condition
+only, and replay methods convert the non-stationary problem back to a
+stationary one at the cost of storing data. \strata\ instead removes each
+condition architecturally: routing and sparsity decide \emph{where}
+information is written; a fast/slow split and consolidation cascades decide
+\emph{when}; and predictive-residual coding decides \emph{what}---only the
+deviation from a slow expectation ever reaches plastic weights.
+
+\section{The \strata\ Architecture}
+\label{sec:architecture}
+
+\strata\ is an online next-input predictor. Inputs $x_t \in \mathbb{R}^d$
+arrive one per tick with no task labels and no episode boundaries. All
+learning rules are local (delta rules and imprinting); the only
+temporal credit assignment is through bounded liquid state, never through
+backpropagation through time.
+
+\subsection{Routing and the slow pathway}
+Each \emph{column} $c$ owns a centroid $\mu_c \in \mathbb{R}^d$: an
+exponential moving average of the inputs it has claimed, serving
+simultaneously as (i) its routing identity and (ii) its slow
+\emph{expectation} of the input. A slow context $\kappa_t = (1-\rho)\,
+\kappa_{t-1} + \rho\, x_t$ is routed by cosine affinity
+$a_c = \cos(\kappa_t, \mu_c)$ with \textbf{three-way hysteresis}:
+\begin{align}
+a_c \ge \theta_{\mathrm{claim}} &: \text{column may absorb the input into
+its identity (and update claim statistics)}\nonumber\\
+a_c \ge \theta_{\mathrm{route}} &: \text{column participates in prediction
+\emph{and} learning}\nonumber\\
+a_c < \theta_{\mathrm{route}} &: \text{column may serve as fallback
+predictor but receives \emph{zero} learning,}\nonumber
+\end{align}
+with $\theta_{\mathrm{claim}} \gg \theta_{\mathrm{route}}$ and all identity
+updates frozen while a regime transition is detected. Persistent orphanhood
+(no column routable), measured by a leaky accumulator rather than a
+consecutive-tick counter, spawns a new column warm-started from its nearest
+neighbour. Optionally, thresholds are \emph{adaptive}: per-column claim
+statistics $(m_c, v_c)$ tracked only on claimed ticks give
+$\theta_{\mathrm{claim},c} = \max\!\big(m_c - \lambda\sqrt{v_c},\;
+b + \kappa\,\sigma_b\big)$, where $(b,\sigma_b)$ are background-similarity
+statistics tracked on orphaned ticks; the floor term is load-bearing
+(\S\ref{sec:taxonomy}, \emph{threshold collapse}).
+
+\subsection{Predictive-residual coding (the two-pathway split)}
+The plastic pathway never sees the raw input. With $\mu$ the claiming
+column's centroid, the residual $r_t = x_t - \mu$ is encoded by a sparse
+expansion $z_t = \mathrm{enc}(r_t) \in \mathbb{R}^{D}$ ($s$-sparse,
+$s \ll D$), and the final prediction adds the expectation back:
+\begin{equation}
+\hat{x}_{t+1} \;=\; \mu \;+\; \underbrace{\textstyle\sum_{c} g_c \big(
+C_c h^c_t + D_c z_t + Q_c q_t \big)}_{\text{slow readouts}}
+\;\oplus\; \underbrace{F z_t}_{\text{fast weights}},
+\end{equation}
+where $\oplus$ denotes confidence-weighted blending. Because the shared
+(correlated) component of a regime is absorbed by $\mu$, the dictionary
+codes only deviations---removing, by construction, the input correlations
+that learned features were measured to inherit fatally
+(\S\ref{sec:encoderarc}).
+
+\subsection{Liquid state and readouts}
+Each column carries a fixed, diagonal, input-dependent leaky reservoir with
+\emph{liquid} time constants stretched by novelty $\nu_t$:
+\begin{equation}
+h^c_t = e^{-1/\tau_c(x_t,\nu_t)} \odot h^c_{t-1} +
+\big(1 - e^{-1/\tau_c(x_t,\nu_t)}\big) \odot (W_B x_t),
+\qquad \tau_c = \tau_{\min} + \mathrm{softplus}(w_\tau^{\!\top} x_t)
+\,(1 + \alpha\,\nu_t).
+\end{equation}
+The decay factor lies in $(0,1)$ elementwise, so the state is bounded for
+all time. Three linear readouts learn by local delta rules: $C_c$ over the
+state, $D_c$ over the code, and $Q_c$ over a fixed random $k$WTA
+\emph{conjunctive expansion} $q_t = \mathrm{kWTA}_S\!\big(R\,[z_t \oplus
+h^c_t]\big)$, which manufactures symbol-in-temporal-context features and
+lifts effective key rank above low-rank input manifolds at zero churn risk
+(nothing in $R$ ever moves).
+
+\subsection{The fast/slow split and consolidation}
+A fast-weight matrix $F$ binds keys to residual targets by a
+novelty-gated delta rule, $F \leftarrow F + \eta^w_t\,(v_t - F z_t)
+z_t^{\!\top}$, capturing surprising experience one-shot with no gradient.
+During calm periods, anchors sampled from $F$'s own content are distilled
+into the claiming column's slow readout: consolidation happens later, from
+the system's own memory, never from stored raw data. Every slow parameter
+is the surface of a Benna--Fusi diffusion chain $u_1,\dots,u_m$ with
+geometrically spaced timescales; learning writes only $u_1$, and symmetric
+inter-level exchange converts exponential forgetting into power-law
+retention with relearning savings \cite{benna2016,fusi2005}.
+
+\subsection{Learning the dictionary}
+The encoder's rows may themselves learn, under three protections:
+\textbf{(i) per-unit consolidation}, $\eta_i = \eta_0 / (1 + \kappa\,
+\mathrm{usage}_i)$; \textbf{(ii) novelty recruitment with atomic
+allocation}: when no row matches a residual, the least-used row is drafted
+and \emph{imprinted} one-shot on the Gram--Schmidt residual of the input
+against co-active mature rows, and the input is \emph{re-encoded before
+anything downstream binds to it}, so keys are born stable; and
+\textbf{(iii) usage decay}, which makes consolidation impermanent so a
+finite dictionary forgets gracefully, least-used first. Inference may run
+either as $k$WTA or as \emph{matching pursuit} \cite{mallat1993}: each
+selected atom's contribution is subtracted before the next selection, which
+performs lateral decorrelation \emph{by inference} rather than by weight
+dynamics and therefore cannot conflict with consolidation. Slow readouts
+consolidate onto a key only as fast as the key's supporting rows stop
+moving (\emph{maturity gating}). Dictionaries may also grow structurally:
+capacity added under allocation pressure is \emph{dormant}---masked out of
+inference entirely until the draft-and-imprint path activates it---which
+makes growth exactly backward-transparent (bit-identical old codes,
+unit-tested).
+
+\subsection{The master signal}
+A single standardized surprisal $\nu_t = \|x_t - \hat{x}_t\|^2 /
+\widehat{\mathrm{Var}}$ gates everything: fast-weight writes open with
+novelty; slow learning closes with it ($1/(1+\max(0,\nu_t-1))$), so
+surprising samples are captured episodically rather than consolidated;
+a CUSUM statistic on $\nu_t$ declares regime transitions, freezing identity
+updates and damping mature columns; and sustained routing orphanhood drives
+structural growth.
+
+\section{A Measured Failure Taxonomy}
+\label{sec:taxonomy}
+
+Every entry below was observed in an instrumented experiment before being
+named; each is prevented by a specific mechanism and, where marked
+($\uparrow$), was observed to \emph{recur at the next level of the
+hierarchy} in level-specific form.
+
+\begin{table}[ht]
+\centering\small
+\begin{tabular}{p{3.2cm} p{5.6cm} p{5.6cm}}
+\toprule
+\textbf{Failure} & \textbf{Signature (measured)} & \textbf{Countermeasure}\\
+\midrule
+Absorption $\uparrow$ & A new task drags an old column's centroid onto
+itself; affinity never dips below threshold (0.62 minimum at a boundary;
+0.92 across a schedule change at layer 2) & Claim $\gg$ route hysteresis;
+identity frozen during transitions; fallback predicts but never learns\\
+\addlinespace
+Code drift & Learned encoder rotation invalidates downstream keys;
+old-task error $0.23 \to 0.76$ & Per-unit consolidation; novelty
+recruitment; two-pathway residual coding\\
+\addlinespace
+Correlation inheritance & Learned features fire for every correlated
+sibling; within-task code separation $|\!\cos\!|$ $0.21 \to 0.33$--$0.45$
+& Residual coding (shared structure never reaches the dictionary);
+matching-pursuit inference\\
+\addlinespace
+Orphaned bindings $\uparrow$ & Episodic keys formed pre-allocation never
+match post-imprint codes & Atomic allocation: re-encode after imprint;
+layer boundaries transmit only post-settlement codes\\
+\addlinespace
+Capacity exhaustion & All virgin rows consumed (288 symbols vs.\ 128
+units); floors degrade $0.168 \to 0.258$ while a random encoder stays flat
+& Usage decay (graceful, least-used-first); dormant structural growth\\
+\addlinespace
+Threshold collapse & A column claiming noise widens its own adaptive band;
+absorption returns through the statistics & Background floor
+$\theta_{\mathrm{claim}} \ge b + \kappa\sigma_b$; statistics update only on
+claimed ticks\\
+\addlinespace
+Prior capture & A confident-but-wrong top-down prior forces the lower layer
+into the wrong regime & Bounded prior bonus (can promote a routable column,
+never make an alien one routable); priors bias inference, never learning\\
+\addlinespace
+Consolidation mis-attribution & Key-affinity anchor assignment distilled
+one task's memories into another task's column & Ownership from the routing
+context, not key similarity\\
+\bottomrule
+\end{tabular}
+\caption{The failure taxonomy. Numbers reference the experiments of
+\S\ref{sec:results}.}
+\label{tab:taxonomy}
+\end{table}
+
+\section{Benchmarks}
+\label{sec:benches}
+
+All benches stream noisy cyclic sequences of unit vectors
+($d{=}24$, cycle lengths 12--13, additive noise $\sigma{=}0.02$), one
+sample per tick, with tasks switched without any signal to the learner.
+A methodological finding shaped their design: \textbf{disjoint-vocabulary
+task sequences produce no measurable forgetting even in unprotected
+baselines}, because a single linear map can fit all tasks jointly whenever
+no key maps to two targets and capacity suffices. Forgetting must be
+\emph{forced}: our tasks share a vocabulary subset whose successors differ
+per task (interference bench), or belong to \emph{families} with correlated
+symbols and partially shared transitions (long-sequence bench; 8 families
+$\times$ 3 variants $=$ 24 tasks), optionally with family residuals
+confined to a rank-3 subspace (low-rank bench). Retention is measured by
+\emph{frozen-circuit probes}: a deep copy of the system with all
+plasticity, fast-weight capture, and identity updates disabled, evaluated
+on a past task after the full schedule. Forward transfer is measured as
+time-to-criterion on a family's later variants relative to its first.
+
+\section{Results}
+\label{sec:results}
+
+\subsection{Layered defenses on the interference bench}
+Stripping mechanisms one at a time (600 ticks per phase, schedule
+A$\to$B$\to$C$\to$A) yields post-transient recall error on task A of
+\textbf{0.18} (full), 0.34 (no routing), 0.32 (no routing or cascade), and
+\textbf{0.82} (dense unprotected baseline); relearned error returns to the
+originally-learned level (0.042 vs.\ 0.045) for the full system. A
+frozen-circuit probe of an earlier configuration showed task A's circuit
+degrading only $0.085 \to 0.132$ across 1200 ticks of other tasks:
+graceful power-law sag, not erasure.
+
+\subsection{Long-sequence bench: retention, capacity, transfer}
+\label{sec:longbench}
+
+Table~\ref{tab:longbench} shows the full-rank bench (24 tasks, 500
+ticks/task). Capacity grew to 8 columns for 24 tasks across all
+conditions---tracking the 8 families, i.e.\ \emph{diversity}, not task
+count. Retention is flat with age (oldest vs.\ newest third). Later family
+variants reach criterion up to $2.6\times$ faster than first variants.
+
+\begin{table}[ht]
+\centering\small
+\begin{tabular}{lrrrrrr}
+\toprule
+Encoder & TTC v1 & TTC v2+ & Fwd & Ret.\ (old) & Ret.\ (new) & Cols\\
+\midrule
+Fixed random               & 197 & 87  & $2.3\times$ & \textbf{0.214} & 0.216 & 8\\
+Fixed $+$ MP               & 298 & 159 & $1.9\times$ & 0.253 & 0.255 & 8\\
+Learnable, naive           & 240 & 129 & $1.9\times$ & 0.694 & 0.434 & 8\\
+Learnable, consolidated    & 220 & 96  & $2.3\times$ & 0.217 & 0.224 & 8\\
+\textbf{Consolidated $+$ MP} & 232 & \textbf{88} & $\mathbf{2.6\times}$ & 0.216 & \textbf{0.209} & 8\\
+Consolidated $+$ MP $+$ decay & 220 & 89 & $2.5\times$ & 0.229 & 0.219 & 8\\
+\bottomrule
+\end{tabular}
+\caption{Full-rank long-sequence bench (24 tasks; TTC = ticks to criterion;
+Ret.\ = frozen-circuit error, oldest/newest third of tasks). The learned
+dictionary with matching pursuit is the best overall system; the
+$\mathrm{fixed}+\mathrm{MP}$ control confirms the mechanism (explaining
+away pays only when atoms are learned to be worth explaining with).}
+\label{tab:longbench}
+\end{table}
+
+\subsection{The representation-learning arc}
+\label{sec:encoderarc}
+
+Enabling encoder learning naively reintroduced catastrophic aging
+(old-task retention error 0.69 vs.\ 0.21 fixed). Per-unit consolidation
+with novelty recruitment rescued retention (0.29) but \emph{consistently
+destroyed forward transfer} ($0.9\times$) across three allocation variants
+(incremental, one-shot imprinting, residual imprinting). Instrumentation
+localized the cause: learned features \emph{inherit input correlations}
+that random projections destroy---within-task code separation degraded from
+$|\!\cos\!| = 0.21$ (random) to $0.33$--$0.45$ (learned)---and the textbook
+remedy, continuous anti-Hebbian decorrelation, would perpetually move
+mature features, i.e.\ exactly the churn consolidation exists to prevent.
+\textbf{The stability--plasticity dilemma re-emerges one level down, at the
+representation layer, and consolidation alone does not solve it there.}
+
+What solved it was architectural: the two-pathway residual code. With the
+shared component absorbed by column expectations, the dictionary sees only
+near-orthogonal residuals; the same consolidated learner then reached
+parity with the fixed encoder on all task metrics with \emph{better} code
+geometry ($0.036$ vs.\ $0.054$), and, after acquisition was decoupled from
+allocation (atomic re-encoding plus maturity gating), surpassed it
+(Table~\ref{tab:longbench}). The whole system also improved: acquisition
+time halved ($427 \to 197$) and transfer rose from $1.6\times$ to
+$2.3\times$ even for the fixed encoder.
+
+\subsection{Low-rank structure, capacity limits, and expressivity}
+
+Confining family residuals to a rank-3 subspace makes symbol directions
+inherently correlated. Matching-pursuit inference plus the learned
+dictionary beat the random encoder where theory requires---single-task
+error floor 0.168 vs.\ 0.188; code separation 0.048 vs.\ 0.137---until
+\textbf{capacity exhaustion}: with 288 symbols against 128 units, all
+virgin rows were consumed within two of eight families, after which floors
+degraded ($0.168 \to 0.258$) while the random encoder stayed flat (nothing
+to exhaust; mediocre everywhere, forever). Usage decay converted the cliff
+into a graceful trade-off (transfer $0.9\times \to 1.2\times$ at fixed
+capacity). The residual transfer gap versus the fixed encoder was then
+closed by the conjunctive expansion: on rank-3, learned$+$MP improved from
+$1.2\times$ to $1.7\times$ forward transfer (TTC on later variants
+$381 \to 155$), matching the fixed encoder---confirming the gap had been
+readout expressivity, not representation quality.
+
+\subsection{Metabolic embedding}
+\label{sec:thermo}
+
+\strata\ updates are outer products, so the Frobenius norm of every weight
+change is available at no cost; the host organism charges this synaptic
+work against a conserved energy economy in which work generates \emph{load}
+(heat), load raises entropy, entropy degrades fidelity, and fidelity gates
+the next tick's plasticity. Two results: (i) at a standard energy capacity,
+baseline cognitive work alone pinned load above the learning-reachability
+ceiling---the organ entered a saturated no-learning attractor (accuracy
+0.12; learning unreachable on 397/400 ticks), reproducing a known
+pathology of the host system in a learning organ; (ii) with a
+brain-sized energy budget, a \textbf{burst/cool cadence emerged from pure
+physics}: learning-reachability flickered at $\sim$4-tick spacing (86
+ceiling crossings in 400 ticks) with no cooling rule anywhere in the code,
+at an accuracy cost relative to the unconstrained control (0.34 vs.\ 0.57)
+attributable to a separately documented saturated-fidelity attractor of the
+host. Methodologically, the energy instrumentation acted as an autonomic
+bug detector: a silent learning collapse (a missing normalization) was
+caught because the organ went \emph{cold}.
+
+\subsection{Scale verification at 48 tasks}
+\label{sec:scale48}
+
+Doubling the schedule (16 families $\times$ 3 variants, rank-3 residuals,
+400 ticks/task) with the growing dictionary (initial size 64) and adaptive
+claim bands produced the falsification cycle recorded in
+Table~\ref{tab:falsification}: the first run spawn-stormed (48 columns for
+48 tasks; newest-third frozen-probe error above 1.0 because tasks arriving
+after the column cap were orphaned into no-learning fallback), the cause
+was traced to background statistics absorbing transition swings, and after
+the statistics-freeze fix both a static-threshold control and the adaptive
+retest produced \textbf{exactly 16 columns for 16 families in every
+condition}---diversity scaling intact at twice the task count---with
+retention flat with age (best row: 0.306 oldest vs.\ 0.310 newest third)
+and forward transfer of 1.4--1.6$\times$. Adaptive bands slightly
+outperformed static thresholds after the fix (e.g., fixed encoder: 0.306
+vs.\ 0.334 old-task retention). One honest caveat: on this rank-3 bench at
+48 tasks the fixed encoder is again the best overall row---the learnable
+conditions ran capacity-limited (576 total symbols against a 128-unit
+dictionary cap), so the flagship learned-dictionary advantage of
+Table~\ref{tab:longbench} should not be assumed to extend to regimes where
+allocation demand far exceeds dictionary capacity.
+
+\subsection{Depth: a two-layer stack}
+\label{sec:depth}
+
+Layer 2 ticks only at Layer 1's regime boundaries: each detected
+transition, after settlement, is pooled into one event
+$u = \sum_t \nu_t\,\phi(z_t, e_t) / \sum_t \nu_t$, and L2 runs the identical
+mechanism suite over events. Its predictions decode into bounded routing
+priors and context seeding at the next transition. Across three seeds the
+revisit transient (error in the first 40 ticks of a returning regime)
+dropped \textbf{15--31\%} (mean $\approx 23\%$). Three lessons: (i)
+\emph{emit what arrived, not what confusion felt like}---pooling the
+surprise burst itself made all boundaries look identical and forbade L2
+differentiation (fixing this raised the payoff from 18\% to 31\%); (ii)
+absorption recurred at L2 as context--centroid co-drift over a shared event
+stream (affinity 0.92 across a complete schedule change), with the
+additional geometric fact that \emph{mixtures of unit vectors crowd
+together}, making mixture-level identity intrinsically thin-margined; and
+(iii) a measured \textbf{design constraint for hierarchy} that we propose
+as a general law: \emph{hierarchical abstraction density requires geometric
+timescale separation}. L2 \emph{can} differentiate regime-arrival types
+(2--3 columns tracking schedule structure under event-granularity
+thresholds), but at tens of events per run, splitting experience across
+columns starves each successor map and prior quality degrades ($31\% \to
+10\%$). The system thereby identifies, correctly, that the stream does not
+yet contain enough regime-level experience to support differentiated
+regime-level structure---the best overseer at small event budgets is the
+least differentiated one---and quantifies how much more it would need.
+Abstraction at level $N{+}1$ requires orders of magnitude more time than
+level $N$; schedule-level structure belongs to a third layer, not to a
+threshold adjustment at the second.
+
+\section{The Falsification Record}
+\label{sec:falsification}
+
+Each mechanism was tested against a failure criterion stated \emph{before}
+the experiment ran. We report the record in full, including the entries
+where the design as first built failed its own test and had to be
+recalibrated---these entries are, in our view, the strongest evidence that
+the taxonomy is doing real work rather than post-hoc justification.
+
+\begin{table}[ht]
+\centering\small
+\begin{tabular}{p{2.9cm} p{4.4cm} p{3.2cm} p{3.8cm}}
+\toprule
+\textbf{Mechanism} & \textbf{Pre-registered hypothesis} &
+\textbf{Falsifier} & \textbf{Outcome}\\
+\midrule
+Naive encoder learning & Unprotected representation learning will
+reintroduce forgetting (stated before implementation) & Retention remains
+flat & \emph{Hypothesis confirmed}: old-task error $0.23 \to 0.76$\\
+\addlinespace
+Consolidation alone & Per-unit consolidation suffices for a learnable
+encoder & Transfer or retention degrades & \textbf{Falsified} three times
+(three allocation variants): retention rescued, transfer destroyed
+($0.9\times$); cause measured as correlation inheritance\\
+\addlinespace
+Two-pathway residual coding & Removing shared structure before the
+dictionary resolves correlation inheritance & Code separation fails to
+recover & Survived: $|\!\cos\!|$ $0.33$--$0.45 \to 0.036$, better than
+random ($0.054$); all task metrics improved\\
+\addlinespace
+Conjunctive expansion & The rank-3 transfer gap is readout expressivity,
+not representation quality & Gap fails to close with superior codes &
+Survived decisively: $1.2\times \to 1.7\times$, TTC $381 \to 155$\\
+\addlinespace
+Structural growth & Zero-initialized growth is backward-transparent &
+Any existing code or readout changes & \textbf{Falsified as designed}
+(fresh random rows won inference for old inputs); redesigned with dormant
+capacity; then survived bit-exactly (unit-tested)\\
+\addlinespace
+Two-layer stack & Top-down priors cut the revisit transient & No
+measurable reduction & Survived (15--31\%), after one interface
+recalibration: pooling the surprise burst fed L2 undiscriminative events
+(18\%); pooling post-settlement arrivals fixed it (31\%)\\
+\addlinespace
+L2 diversity scaling & L2 columns track schedules as L1 columns track
+tasks & Column count fails to track schedule diversity & \textbf{Falsified
+at current event budgets}; refined into the geometric-timescale design
+constraint (\S\ref{sec:depth})\\
+\addlinespace
+Adaptive bands at scale & Statistics-tracked thresholds preserve diversity
+scaling at 48 tasks / 16 families & Spawn storm or threshold collapse &
+\textbf{Falsified as designed}: spawn storm (48 columns for 48 tasks;
+family sharing collapsed; late-task retention pathological). Cause traced
+to background statistics updating during transition swings, inflating the
+adaptive floor. Fix: statistics freeze during transitions (the same law as
+centroids and claim statistics). \emph{Revalidation passed}: 16 columns for
+16 families, matching a static-threshold control run
+(\S\ref{sec:scale48})\\
+\bottomrule
+\end{tabular}
+\caption{The falsification record. Bold outcomes are failures of the
+design as first built; every failure produced either a redesign that then
+passed, or a quantified constraint.}
+\label{tab:falsification}
+\end{table}
+
+\section{Related Work}
+
+Regularization approaches estimate parameter importance and slow important
+weights \cite{kirkpatrick2017,zenke2017}; \strata's cascade and per-unit
+consolidation play a similar role but are computed online from local
+signals, with no Fisher estimation and no task boundaries, and are
+demonstrated to be insufficient alone at the representation layer
+(\S\ref{sec:encoderarc}). Replay methods \cite{shin2017} revisit stored or
+generated data; \strata's calm-time distillation replays only its own
+fast-weight content. Structural methods \cite{rusu2016} isolate tasks in
+grown modules; \strata's columns are similar in spirit but are recruited by
+measured orphanhood rather than task labels, grow with diversity rather
+than task count, and share a learned encoder. The fast/slow organization
+follows complementary learning systems \cite{mcclelland1995}; the cascade
+follows \cite{fusi2005,benna2016}; sparse expansion coding follows
+\cite{olshausen1996,dasgupta2017}; residual coding follows predictive
+coding \cite{rao1999}; matching pursuit is classical \cite{mallat1993};
+fixed high-dimensional dynamics with learned readouts follow reservoir
+computing \cite{maass2002,jaeger2001}. Our contribution is the
+composition under strict continual-learning constraints, and the failure
+taxonomy that the composition exposed.
+
+\section{Limitations}
+\label{sec:limitations}
+
+We state these plainly. (1)~\textbf{Scale}: all results are at $d{=}24$,
+$\le$48 tasks, $\sim$300 symbols, linear readouts over fixed expansions;
+per-tick dynamics are interpreted, not optimized. (2)~\textbf{Benchmark
+ownership}: every bench was designed by us; there is no comparison against
+EWC, replay, or progressive networks on benchmarks we do not control. A
+pre-registered protocol for that comparison---including the interventional
+criterion for what observed forgetting would count as \emph{outside} the
+trichotomy, fixed before any external run---accompanies the code
+(\code{paper/preregistration.md}).
+(3)~\textbf{Depth}: one representation layer plus a two-layer routing
+hierarchy; whether the stability machinery composes through deep feature
+hierarchies is untested and is, in our judgment, the single most important
+open question. (4)~\textbf{Hand-set constants}: routing thresholds were
+tuned to measured geometry; the adaptive-band mechanism \emph{failed its
+first pre-registered scale falsifier} (spawn storm;
+Table~\ref{tab:falsification}) and passed revalidation only after the
+statistics-freeze redesign (\S\ref{sec:scale48}); further scale remains
+untested. (5)~\textbf{Capability
+ceiling}: stability was purchased with deliberately weak learners; the
+learned-versus-fixed dictionary advantage, while now positive, is modest.
+(6)~Some forgetting is information-theoretically mandatory at finite
+capacity on unbounded streams; \strata\ chooses \emph{which} (graceful,
+least-used-first), not \emph{whether}.
+
+\section{Conclusion}
+
+Treated as an architectural default rather than a training pathology,
+catastrophic forgetting decomposes into engineering constraints that can be
+named, measured, unit-tested, and removed. Seven local mechanisms suffice,
+at prototype scale, for label-free, replay-free continual learning with
+flat retention, diversity-scaled capacity, positive forward transfer,
+graceful forgetting, metabolic self-regulation, and---after resolving the
+representation-layer dilemma architecturally---representation learning that
+helps rather than harms. The failure taxonomy generalized upward through
+one level of hierarchy, in level-specific costume, exactly as a useful
+theory should: it told us where to look when things broke. The decisive
+next experiments are composition under depth, benchmarks we do not own,
+and an order of magnitude of scale.
+
+\paragraph{Reproducibility.} All experiments are reproducible from the
+accompanying code: \code{python -m strata.demo} (interference bench),
+\code{python -m strata.longbench} (long-sequence bench; \code{--rank 3},
+\code{--conjunctive 512}, \code{--grow-from}, \code{--adaptive}),
+\code{python -m strata.stack} (depth bench), \code{python main.py --cortex
+[--thermo]} (metabolic embedding), and \code{pytest} (62 tests, including
+exact backward-transparency of structural growth and the zero-plasticity
+freeze contract).
+
+\begin{thebibliography}{99}
+\bibitem{benna2016} M.~K. Benna and S.~Fusi. Computational principles of
+synaptic memory consolidation. \emph{Nature Neuroscience}, 19:1697--1706,
+2016.
+\bibitem{dasgupta2017} S.~Dasgupta, C.~F. Stevens, and S.~Navlakha. A
+neural algorithm for a fundamental computing problem. \emph{Science},
+358(6364):793--796, 2017.
+\bibitem{french1999} R.~M. French. Catastrophic forgetting in connectionist
+networks. \emph{Trends in Cognitive Sciences}, 3(4):128--135, 1999.
+\bibitem{fusi2005} S.~Fusi, P.~J. Drew, and L.~F. Abbott. Cascade models of
+synaptically stored memories. \emph{Neuron}, 45(4):599--611, 2005.
+\bibitem{jaeger2001} H.~Jaeger. The ``echo state'' approach to analysing
+and training recurrent neural networks. GMD Technical Report 148, 2001.
+\bibitem{kirkpatrick2017} J.~Kirkpatrick et al. Overcoming catastrophic
+forgetting in neural networks. \emph{PNAS}, 114(13):3521--3526, 2017.
+\bibitem{maass2002} W.~Maass, T.~Natschl\"ager, and H.~Markram. Real-time
+computing without stable states. \emph{Neural Computation},
+14(11):2531--2560, 2002.
+\bibitem{mallat1993} S.~Mallat and Z.~Zhang. Matching pursuits with
+time-frequency dictionaries. \emph{IEEE Transactions on Signal Processing},
+41(12):3397--3415, 1993.
+\bibitem{mcclelland1995} J.~L. McClelland, B.~L. McNaughton, and R.~C.
+O'Reilly. Why there are complementary learning systems in the hippocampus
+and neocortex. \emph{Psychological Review}, 102(3):419--457, 1995.
+\bibitem{mccloskey1989} M.~McCloskey and N.~J. Cohen. Catastrophic
+interference in connectionist networks. \emph{Psychology of Learning and
+Motivation}, 24:109--165, 1989.
+\bibitem{olshausen1996} B.~A. Olshausen and D.~J. Field. Emergence of
+simple-cell receptive field properties by learning a sparse code for
+natural images. \emph{Nature}, 381:607--609, 1996.
+\bibitem{rao1999} R.~P.~N. Rao and D.~H. Ballard. Predictive coding in the
+visual cortex. \emph{Nature Neuroscience}, 2(1):79--87, 1999.
+\bibitem{rusu2016} A.~A. Rusu et al. Progressive neural networks.
+\emph{arXiv:1606.04671}, 2016.
+\bibitem{shin2017} H.~Shin, J.~K. Lee, J.~Kim, and J.~Kim. Continual
+learning with deep generative replay. \emph{NeurIPS}, 2017.
+\bibitem{zenke2017} F.~Zenke, B.~Poole, and S.~Ganguli. Continual learning
+through synaptic intelligence. \emph{ICML}, 2017.
+\end{thebibliography}
+
+\appendix
+
+\section{Hyperparameters}
+Default configuration (dimensionless units; one sample per tick):
+input $d{=}24$; code $D{=}128$, sparsity $s{=}8$; state $n{=}32$ per
+column; $\rho_{\mathrm{context}}{=}0.08$;
+$\theta_{\mathrm{route}}{=}0.65$, $\theta_{\mathrm{claim}}{=}0.8$;
+spawn: leaky rate 0.15, threshold 0.8; cascade: 4 levels,
+$\tau_1{=}8$, ratio 4; learning rates: state readout 0.05, code readout
+0.3, distillation 0.1, fast weights 0.6 (novelty-gated, hard floor at 5\%
+of maximum rate); CUSUM slack 0.5, threshold 8, transition refractory 15
+ticks, mature-column damping 0.15; encoder learning 0.15 with
+consolidation $\kappa{=}0.2$, recruitment threshold 0.5, usage decay
+$2\times10^{-4}$ (when enabled); conjunctive expansion 512 with $S{=}12$
+(when enabled); layer-2: event-driven, settle window 15 ticks,
+$\rho{=}0.12$, $\theta_{\mathrm{claim}}{=}0.9$, cascade $\tau_1$ offset
+$\times16$.
+
+\section{On the use of failure-driven development}
+Ten of the mechanisms reported here were not in the original design; each
+was added after an instrumented experiment falsified the design as it
+stood, and three (absorption hysteresis, dormant growth, post-settlement
+event pooling) were forced by failures that the a-priori mathematics gave
+no reason to expect. We record this because it bears on methodology:
+in this domain, contact with data was worth more than derivation at every
+single decision point.
+
+\end{document}

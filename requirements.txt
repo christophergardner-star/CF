@@ -1,0 +1,9 @@
+# Runtime dependency for the live console dashboard and rich logging.
+# The kernel degrades gracefully to plain text if rich is not installed.
+rich>=13.0
+
+# Used only by the strata/ prototype (the organism kernel stays pure Python).
+numpy>=1.26
+
+# Development / testing only:
+pytest>=8.0
