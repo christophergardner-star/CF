@@ -1,0 +1,989 @@
+{
+ "seed": 0,
+ "verdict": {
+  "forgetting_events": 17,
+  "events_outside_trichotomy": 0,
+  "unattributed_fraction": 0.0,
+  "c_criterion_fired": false,
+  "incompleteness_criterion_fired": false,
+  "attribution_counts": {
+   "substrate": 17,
+   "timescale": 1,
+   "basis": 17
+  }
+ },
+ "baselines": [
+  {
+   "method": "naive",
+   "events": [
+    {
+     "pair": "0vs1 after 2vs3",
+     "event": true,
+     "drop": 0.9981,
+     "attributed_to": [
+      "substrate",
+      "basis"
+     ],
+     "outside_trichotomy": false,
+     "substrate_recovery": 1.0,
+     "timescale_reduction": 0.313,
+     "basis_max_cka": 0.727,
+     "basis_max_layer": "fc2",
+     "basis_null_floor": {
+      "fc1": 0.034,
+      "fc2": 0.217
+     },
+     "vacuous_layers": [
+      "fc2"
+     ]
+    },
+    {
+     "pair": "0vs1 after 4vs5",
+     "event": false,
+     "drop": 0.0,
+     "attributed_to": [],
+     "outside_trichotomy": false,
+     "substrate_recovery": NaN,
+     "timescale_reduction": NaN,
+     "basis_max_cka": 0.49,
+     "basis_max_layer": "fc2",
+     "basis_null_floor": {
+      "fc1": 0.041,
+      "fc2": 0.147
+     },
+     "vacuous_layers": [
+      "fc2"
+     ]
+    },
+    {
+     "pair": "2vs3 after 4vs5",
+     "event": true,
+     "drop": 0.975,
+     "attributed_to": [
+      "substrate",
+      "basis"
+     ],
+     "outside_trichotomy": false,
+     "substrate_recovery": 1.0,
+     "timescale_reduction": 0.127,
+     "basis_max_cka": 0.888,
+     "basis_max_layer": "fc2",
+     "basis_null_floor": {
+      "fc1": 0.055,
+      "fc2": 0.111
+     },
+     "vacuous_layers": [
+      "fc2"
+     ]
+    },
+    {
+     "pair": "0vs1 after 6vs7",
+     "event": false,
+     "drop": 0.0,
+     "attributed_to": [],
+     "outside_trichotomy": false,
+     "substrate_recovery": NaN,
+     "timescale_reduction": NaN,
+     "basis_max_cka": 0.717,
+     "basis_max_layer": "fc2",
+     "basis_null_floor": {
+      "fc1": 0.03,
+      "fc2": 0.202
+     },
+     "vacuous_layers": [
+      "fc2"
+     ]
+    },
+    {
+     "pair": "2vs3 after 6vs7",
+     "event": false,
+     "drop": 0.0,
+     "attributed_to": [],
+     "outside_trichotomy": false,
+     "substrate_recovery": NaN,
+     "timescale_reduction": NaN,
+     "basis_max_cka": 0.826,
+     "basis_max_layer": "fc2",
+     "basis_null_floor": {
+      "fc1": 0.058,
+      "fc2": 0.373
+     },
+     "vacuous_layers": [
+      "fc2"
+     ]
+    },
+    {
+     "pair": "4vs5 after 6vs7",
+     "event": true,
+     "drop": 0.9909,
+     "attributed_to": [
+      "substrate",
+      "basis"
+     ],
+     "outside_trichotomy": false,
+     "substrate_recovery": 1.0,
+     "timescale_reduction": 0.125,
+     "basis_max_cka": 0.672,
+     "basis_max_layer": "fc2",
+     "basis_null_floor": {
+      "fc1": 0.042,
+      "fc2": 0.286
+     },
+     "vacuous_layers": [
+      "fc2"
+     ]
+    },
+    {
+     "pair": "0vs1 after 8vs9",
+     "event": false,
+     "drop": 0.0,
+     "attributed_to": [],
+     "outside_trichotomy": false,
+     "substrate_recovery": NaN,
+     "timescale_reduction": NaN,
+     "basis_max_cka": 0.544,
+     "basis_max_layer": "fc2",
+     "basis_null_floor": {
+      "fc1": 0.039,
+      "fc2": 0.219
+     },
+     "vacuous_layers": [
+      "fc2"
+     ]
+    },
+    {
+     "pair": "2vs3 after 8vs9",
+     "event": false,
+     "drop": 0.0,
+     "attributed_to": [],
+     "outside_trichotomy": false,
+     "substrate_recovery": NaN,
+     "timescale_reduction": NaN,
+     "basis_max_cka": 0.805,
+     "basis_max_layer": "fc2",
+     "basis_null_floor": {
+      "fc1": 0.054,
+      "fc2": 0.322
+     },
+     "vacuous_layers": [
+      "fc2"
+     ]
+    },
+    {
+     "pair": "4vs5 after 8vs9",
+     "event": true,
+     "drop": 0.0005,
+     "attributed_to": [
+      "substrate",
+      "timescale",
+      "basis"
+     ],
+     "outside_trichotomy": false,
+     "substrate_recovery": 1.0,
+     "timescale_reduction": 1.0,
+     "basis_max_cka": 0.831,
+     "basis_max_layer": "fc2",
+     "basis_null_floor": {
+      "fc1": 0.055,
+      "fc2": 0.283
+     },
+     "vacuous_layers": [
+      "fc2"
+     ]
+    },
+    {
+     "pair": "6vs7 after 8vs9",
+     "event": true,
+     "drop": 0.9909,
+     "attributed_to": [
+      "substrate",
+      "basis"
+     ],
+     "outside_trichotomy": false,
+     "substrate_recovery": 1.0,
+     "timescale_reduction": 0.127,
+     "basis_max_cka": 0.691,
+     "basis_max_layer": "fc2",
+     "basis_null_floor": {
+      "fc1": 0.046,
+      "fc2": 0.319
+     },
+     "vacuous_layers": [
+      "fc2"
+     ]
+    }
+   ],
+   "task_accuracies": [
+    {
+     "task": "0vs1",
+     "acc_after_training": 0.9981087470449173
+    },
+    {
+     "task": "2vs3",
+     "acc_after_training": 0.975024485798237
+    },
+    {
+     "task": "4vs5",
+     "acc_after_training": 0.991462113127001
+    },
+    {
+     "task": "6vs7",
+     "acc_after_training": 0.9909365558912386
+    },
+    {
+     "task": "8vs9",
+     "acc_after_training": 0.9657085224407463
+    }
+   ],
+   "final_accuracies": [
+    {
+     "task": "0vs1",
+     "acc": 0.0
+    },
+    {
+     "task": "2vs3",
+     "acc": 0.0
+    },
+    {
+     "task": "4vs5",
+     "acc": 0.0
+    },
+    {
+     "task": "6vs7",
+     "acc": 0.0
+    },
+    {
+     "task": "8vs9",
+     "acc": 0.9657085224407463
+    }
+   ],
+   "seconds": 11.4
+  },
+  {
+   "method": "ewc",
+   "events": [
+    {
+     "pair": "0vs1 after 2vs3",
+     "event": true,
+     "drop": 0.9981,
+     "attributed_to": [
+      "substrate",
+      "basis"
+     ],
+     "outside_trichotomy": false,
+     "substrate_recovery": 1.0,
+     "timescale_reduction": 0.342,
+     "basis_max_cka": 0.727,
+     "basis_max_layer": "fc2",
+     "basis_null_floor": {
+      "fc1": 0.034,
+      "fc2": 0.217
+     },
+     "vacuous_layers": [
+      "fc2"
+     ]
+    },
+    {
+     "pair": "0vs1 after 4vs5",
+     "event": false,
+     "drop": 0.0,
+     "attributed_to": [],
+     "outside_trichotomy": false,
+     "substrate_recovery": NaN,
+     "timescale_reduction": NaN,
+     "basis_max_cka": 0.469,
+     "basis_max_layer": "fc2",
+     "basis_null_floor": {
+      "fc1": 0.04,
+      "fc2": 0.143
+     },
+     "vacuous_layers": [
+      "fc2"
+     ]
+    },
+    {
+     "pair": "2vs3 after 4vs5",
+     "event": true,
+     "drop": 0.954,
+     "attributed_to": [
+      "substrate",
+      "basis"
+     ],
+     "outside_trichotomy": false,
+     "substrate_recovery": 1.0,
+     "timescale_reduction": 0.175,
+     "basis_max_cka": 0.892,
+     "basis_max_layer": "fc2",
+     "basis_null_floor": {
+      "fc1": 0.056,
+      "fc2": 0.13
+     },
+     "vacuous_layers": [
+      "fc2"
+     ]
+    },
+    {
+     "pair": "0vs1 after 6vs7",
+     "event": false,
+     "drop": 0.0,
+     "attributed_to": [],
+     "outside_trichotomy": false,
+     "substrate_recovery": NaN,
+     "timescale_reduction": NaN,
+     "basis_max_cka": 0.715,
+     "basis_max_layer": "fc2",
+     "basis_null_floor": {
+      "fc1": 0.031,
+      "fc2": 0.199
+     },
+     "vacuous_layers": [
+      "fc2"
+     ]
+    },
+    {
+     "pair": "2vs3 after 6vs7",
+     "event": true,
+     "drop": 0.0191,
+     "attributed_to": [
+      "substrate",
+      "basis"
+     ],
+     "outside_trichotomy": false,
+     "substrate_recovery": 1.0,
+     "timescale_reduction": 0.179,
+     "basis_max_cka": 0.808,
+     "basis_max_layer": "fc2",
+     "basis_null_floor": {
+      "fc1": 0.057,
+      "fc2": 0.334
+     },
+     "vacuous_layers": [
+      "fc2"
+     ]
+    },
+    {
+     "pair": "4vs5 after 6vs7",
+     "event": true,
+     "drop": 0.9626,
+     "attributed_to": [
+      "substrate",
+      "basis"
+     ],
+     "outside_trichotomy": false,
+     "substrate_recovery": 1.0,
+     "timescale_reduction": 0.164,
+     "basis_max_cka": 0.647,
+     "basis_max_layer": "fc2",
+     "basis_null_floor": {
+      "fc1": 0.045,
+      "fc2": 0.262
+     },
+     "vacuous_layers": [
+      "fc2"
+     ]
+    },
+    {
+     "pair": "0vs1 after 8vs9",
+     "event": false,
+     "drop": 0.0,
+     "attributed_to": [],
+     "outside_trichotomy": false,
+     "substrate_recovery": NaN,
+     "timescale_reduction": NaN,
+     "basis_max_cka": 0.597,
+     "basis_max_layer": "fc2",
+     "basis_null_floor": {
+      "fc1": 0.043,
+      "fc2": 0.174
+     },
+     "vacuous_layers": [
+      "fc2"
+     ]
+    },
+    {
+     "pair": "2vs3 after 8vs9",
+     "event": false,
+     "drop": 0.0,
+     "attributed_to": [],
+     "outside_trichotomy": false,
+     "substrate_recovery": NaN,
+     "timescale_reduction": NaN,
+     "basis_max_cka": 0.799,
+     "basis_max_layer": "fc2",
+     "basis_null_floor": {
+      "fc1": 0.058,
+      "fc2": 0.26
+     },
+     "vacuous_layers": [
+      "fc2"
+     ]
+    },
+    {
+     "pair": "4vs5 after 8vs9",
+     "event": true,
+     "drop": 0.0256,
+     "attributed_to": [
+      "substrate",
+      "basis"
+     ],
+     "outside_trichotomy": false,
+     "substrate_recovery": 1.0,
+     "timescale_reduction": 0.042,
+     "basis_max_cka": 0.858,
+     "basis_max_layer": "fc2",
+     "basis_null_floor": {
+      "fc1": 0.064,
+      "fc2": 0.278
+     },
+     "vacuous_layers": [
+      "fc2"
+     ]
+    },
+    {
+     "pair": "6vs7 after 8vs9",
+     "event": true,
+     "drop": 0.9899,
+     "attributed_to": [
+      "substrate",
+      "basis"
+     ],
+     "outside_trichotomy": false,
+     "substrate_recovery": 1.0,
+     "timescale_reduction": 0.145,
+     "basis_max_cka": 0.67,
+     "basis_max_layer": "fc2",
+     "basis_null_floor": {
+      "fc1": 0.055,
+      "fc2": 0.283
+     },
+     "vacuous_layers": [
+      "fc2"
+     ]
+    }
+   ],
+   "task_accuracies": [
+    {
+     "task": "0vs1",
+     "acc_after_training": 0.9981087470449173
+    },
+    {
+     "task": "2vs3",
+     "acc_after_training": 0.9730656219392753
+    },
+    {
+     "task": "4vs5",
+     "acc_after_training": 0.9893276414087513
+    },
+    {
+     "task": "6vs7",
+     "acc_after_training": 0.9914400805639476
+    },
+    {
+     "task": "8vs9",
+     "acc_after_training": 0.9485627836611196
+    }
+   ],
+   "final_accuracies": [
+    {
+     "task": "0vs1",
+     "acc": 0.0
+    },
+    {
+     "task": "2vs3",
+     "acc": 0.0
+    },
+    {
+     "task": "4vs5",
+     "acc": 0.0010672358591248667
+    },
+    {
+     "task": "6vs7",
+     "acc": 0.0015105740181268882
+    },
+    {
+     "task": "8vs9",
+     "acc": 0.9485627836611196
+    }
+   ],
+   "seconds": 100.3
+  },
+  {
+   "method": "si",
+   "events": [
+    {
+     "pair": "0vs1 after 2vs3",
+     "event": true,
+     "drop": 0.9981,
+     "attributed_to": [
+      "substrate",
+      "basis"
+     ],
+     "outside_trichotomy": false,
+     "substrate_recovery": 1.0,
+     "timescale_reduction": 0.329,
+     "basis_max_cka": 0.727,
+     "basis_max_layer": "fc2",
+     "basis_null_floor": {
+      "fc1": 0.034,
+      "fc2": 0.217
+     },
+     "vacuous_layers": [
+      "fc2"
+     ]
+    },
+    {
+     "pair": "0vs1 after 4vs5",
+     "event": false,
+     "drop": 0.0,
+     "attributed_to": [],
+     "outside_trichotomy": false,
+     "substrate_recovery": NaN,
+     "timescale_reduction": NaN,
+     "basis_max_cka": 0.482,
+     "basis_max_layer": "fc2",
+     "basis_null_floor": {
+      "fc1": 0.041,
+      "fc2": 0.147
+     },
+     "vacuous_layers": [
+      "fc2"
+     ]
+    },
+    {
+     "pair": "2vs3 after 4vs5",
+     "event": true,
+     "drop": 0.9736,
+     "attributed_to": [
+      "substrate",
+      "basis"
+     ],
+     "outside_trichotomy": false,
+     "substrate_recovery": 1.0,
+     "timescale_reduction": 0.136,
+     "basis_max_cka": 0.887,
+     "basis_max_layer": "fc2",
+     "basis_null_floor": {
+      "fc1": 0.056,
+      "fc2": 0.123
+     },
+     "vacuous_layers": [
+      "fc2"
+     ]
+    },
+    {
+     "pair": "0vs1 after 6vs7",
+     "event": false,
+     "drop": 0.0,
+     "attributed_to": [],
+     "outside_trichotomy": false,
+     "substrate_recovery": NaN,
+     "timescale_reduction": NaN,
+     "basis_max_cka": 0.709,
+     "basis_max_layer": "fc2",
+     "basis_null_floor": {
+      "fc1": 0.03,
+      "fc2": 0.21
+     },
+     "vacuous_layers": [
+      "fc2"
+     ]
+    },
+    {
+     "pair": "2vs3 after 6vs7",
+     "event": true,
+     "drop": 0.0015,
+     "attributed_to": [
+      "substrate",
+      "basis"
+     ],
+     "outside_trichotomy": false,
+     "substrate_recovery": 1.0,
+     "timescale_reduction": 0.0,
+     "basis_max_cka": 0.817,
+     "basis_max_layer": "fc2",
+     "basis_null_floor": {
+      "fc1": 0.058,
+      "fc2": 0.374
+     },
+     "vacuous_layers": [
+      "fc2"
+     ]
+    },
+    {
+     "pair": "4vs5 after 6vs7",
+     "event": true,
+     "drop": 0.9856,
+     "attributed_to": [
+      "substrate",
+      "basis"
+     ],
+     "outside_trichotomy": false,
+     "substrate_recovery": 1.0,
+     "timescale_reduction": 0.136,
+     "basis_max_cka": 0.664,
+     "basis_max_layer": "fc2",
+     "basis_null_floor": {
+      "fc1": 0.042,
+      "fc2": 0.283
+     },
+     "vacuous_layers": [
+      "fc2"
+     ]
+    },
+    {
+     "pair": "0vs1 after 8vs9",
+     "event": false,
+     "drop": 0.0,
+     "attributed_to": [],
+     "outside_trichotomy": false,
+     "substrate_recovery": NaN,
+     "timescale_reduction": NaN,
+     "basis_max_cka": 0.55,
+     "basis_max_layer": "fc2",
+     "basis_null_floor": {
+      "fc1": 0.039,
+      "fc2": 0.201
+     },
+     "vacuous_layers": [
+      "fc2"
+     ]
+    },
+    {
+     "pair": "2vs3 after 8vs9",
+     "event": false,
+     "drop": 0.0,
+     "attributed_to": [],
+     "outside_trichotomy": false,
+     "substrate_recovery": NaN,
+     "timescale_reduction": NaN,
+     "basis_max_cka": 0.794,
+     "basis_max_layer": "fc2",
+     "basis_null_floor": {
+      "fc1": 0.053,
+      "fc2": 0.306
+     },
+     "vacuous_layers": [
+      "fc2"
+     ]
+    },
+    {
+     "pair": "4vs5 after 8vs9",
+     "event": true,
+     "drop": 0.0059,
+     "attributed_to": [
+      "substrate",
+      "basis"
+     ],
+     "outside_trichotomy": false,
+     "substrate_recovery": 1.0,
+     "timescale_reduction": 0.364,
+     "basis_max_cka": 0.828,
+     "basis_max_layer": "fc2",
+     "basis_null_floor": {
+      "fc1": 0.054,
+      "fc2": 0.27
+     },
+     "vacuous_layers": [
+      "fc2"
+     ]
+    },
+    {
+     "pair": "6vs7 after 8vs9",
+     "event": true,
+     "drop": 0.9869,
+     "attributed_to": [
+      "substrate",
+      "basis"
+     ],
+     "outside_trichotomy": false,
+     "substrate_recovery": 1.0,
+     "timescale_reduction": 0.139,
+     "basis_max_cka": 0.659,
+     "basis_max_layer": "fc2",
+     "basis_null_floor": {
+      "fc1": 0.046,
+      "fc2": 0.31
+     },
+     "vacuous_layers": [
+      "fc2"
+     ]
+    }
+   ],
+   "task_accuracies": [
+    {
+     "task": "0vs1",
+     "acc_after_training": 0.9981087470449173
+    },
+    {
+     "task": "2vs3",
+     "acc_after_training": 0.975024485798237
+    },
+    {
+     "task": "4vs5",
+     "acc_after_training": 0.991462113127001
+    },
+    {
+     "task": "6vs7",
+     "acc_after_training": 0.9904330312185297
+    },
+    {
+     "task": "8vs9",
+     "acc_after_training": 0.9667170953101362
+    }
+   ],
+   "final_accuracies": [
+    {
+     "task": "0vs1",
+     "acc": 0.0
+    },
+    {
+     "task": "2vs3",
+     "acc": 0.0
+    },
+    {
+     "task": "4vs5",
+     "acc": 0.0
+    },
+    {
+     "task": "6vs7",
+     "acc": 0.003524672708962739
+    },
+    {
+     "task": "8vs9",
+     "acc": 0.9667170953101362
+    }
+   ],
+   "seconds": 22.4
+  },
+  {
+   "method": "replay",
+   "events": [
+    {
+     "pair": "0vs1 after 2vs3",
+     "event": false,
+     "drop": 0.0151,
+     "attributed_to": [],
+     "outside_trichotomy": false,
+     "substrate_recovery": 1.0,
+     "timescale_reduction": 0.281,
+     "basis_max_cka": 0.727,
+     "basis_max_layer": "fc2",
+     "basis_null_floor": {
+      "fc1": 0.034,
+      "fc2": 0.217
+     },
+     "vacuous_layers": [
+      "fc2"
+     ]
+    },
+    {
+     "pair": "0vs1 after 4vs5",
+     "event": false,
+     "drop": 0.0241,
+     "attributed_to": [],
+     "outside_trichotomy": false,
+     "substrate_recovery": 1.0,
+     "timescale_reduction": 0.294,
+     "basis_max_cka": 0.721,
+     "basis_max_layer": "fc2",
+     "basis_null_floor": {
+      "fc1": 0.032,
+      "fc2": 0.186
+     },
+     "vacuous_layers": [
+      "fc2"
+     ]
+    },
+    {
+     "pair": "2vs3 after 4vs5",
+     "event": false,
+     "drop": 0.0509,
+     "attributed_to": [],
+     "outside_trichotomy": false,
+     "substrate_recovery": 1.0,
+     "timescale_reduction": -1.202,
+     "basis_max_cka": 0.883,
+     "basis_max_layer": "fc2",
+     "basis_null_floor": {
+      "fc1": 0.074,
+      "fc2": 0.379
+     },
+     "vacuous_layers": [
+      "fc2"
+     ]
+    },
+    {
+     "pair": "0vs1 after 6vs7",
+     "event": false,
+     "drop": 0.0123,
+     "attributed_to": [],
+     "outside_trichotomy": false,
+     "substrate_recovery": 1.0,
+     "timescale_reduction": 0.5,
+     "basis_max_cka": 0.851,
+     "basis_max_layer": "fc2",
+     "basis_null_floor": {
+      "fc1": 0.033,
+      "fc2": 0.329
+     },
+     "vacuous_layers": [
+      "fc2"
+     ]
+    },
+    {
+     "pair": "2vs3 after 6vs7",
+     "event": false,
+     "drop": 0.0034,
+     "attributed_to": [],
+     "outside_trichotomy": false,
+     "substrate_recovery": 1.0,
+     "timescale_reduction": -12.0,
+     "basis_max_cka": 0.807,
+     "basis_max_layer": "fc2",
+     "basis_null_floor": {
+      "fc1": 0.077,
+      "fc2": 0.494
+     },
+     "vacuous_layers": [
+      "fc2"
+     ]
+    },
+    {
+     "pair": "4vs5 after 6vs7",
+     "event": false,
+     "drop": 0.0272,
+     "attributed_to": [],
+     "outside_trichotomy": false,
+     "substrate_recovery": 1.0,
+     "timescale_reduction": -3.02,
+     "basis_max_cka": 0.652,
+     "basis_max_layer": "fc2",
+     "basis_null_floor": {
+      "fc1": 0.064,
+      "fc2": 0.409
+     },
+     "vacuous_layers": [
+      "fc2"
+     ]
+    },
+    {
+     "pair": "0vs1 after 8vs9",
+     "event": false,
+     "drop": 0.0312,
+     "attributed_to": [],
+     "outside_trichotomy": false,
+     "substrate_recovery": 1.0,
+     "timescale_reduction": 0.894,
+     "basis_max_cka": 0.533,
+     "basis_max_layer": "fc2",
+     "basis_null_floor": {
+      "fc1": 0.035,
+      "fc2": 0.189
+     },
+     "vacuous_layers": [
+      "fc2"
+     ]
+    },
+    {
+     "pair": "2vs3 after 8vs9",
+     "event": false,
+     "drop": 0.0593,
+     "attributed_to": [],
+     "outside_trichotomy": false,
+     "substrate_recovery": 1.0,
+     "timescale_reduction": -0.587,
+     "basis_max_cka": 0.714,
+     "basis_max_layer": "fc2",
+     "basis_null_floor": {
+      "fc1": 0.067,
+      "fc2": 0.429
+     },
+     "vacuous_layers": [
+      "fc2"
+     ]
+    },
+    {
+     "pair": "4vs5 after 8vs9",
+     "event": false,
+     "drop": 0.119,
+     "attributed_to": [],
+     "outside_trichotomy": false,
+     "substrate_recovery": 1.0,
+     "timescale_reduction": -0.982,
+     "basis_max_cka": 0.831,
+     "basis_max_layer": "fc2",
+     "basis_null_floor": {
+      "fc1": 0.059,
+      "fc2": 0.36
+     },
+     "vacuous_layers": [
+      "fc2"
+     ]
+    },
+    {
+     "pair": "6vs7 after 8vs9",
+     "event": false,
+     "drop": 0.0765,
+     "attributed_to": [],
+     "outside_trichotomy": false,
+     "substrate_recovery": 1.0,
+     "timescale_reduction": -0.336,
+     "basis_max_cka": 0.579,
+     "basis_max_layer": "fc2",
+     "basis_null_floor": {
+      "fc1": 0.061,
+      "fc2": 0.282
+     },
+     "vacuous_layers": [
+      "fc2"
+     ]
+    }
+   ],
+   "task_accuracies": [
+    {
+     "task": "0vs1",
+     "acc_after_training": 0.9981087470449173
+    },
+    {
+     "task": "2vs3",
+     "acc_after_training": 0.9588638589618022
+    },
+    {
+     "task": "4vs5",
+     "acc_after_training": 0.9541088580576307
+    },
+    {
+     "task": "6vs7",
+     "acc_after_training": 0.9370594159113796
+    },
+    {
+     "task": "8vs9",
+     "acc_after_training": 0.940494200706001
+    }
+   ],
+   "final_accuracies": [
+    {
+     "task": "0vs1",
+     "acc": 0.9153664302600473
+    },
+    {
+     "task": "2vs3",
+     "acc": 0.8452497551420176
+    },
+    {
+     "task": "4vs5",
+     "acc": 0.807897545357524
+    },
+    {
+     "task": "6vs7",
+     "acc": 0.8605236656596174
+    },
+    {
+     "task": "8vs9",
+     "acc": 0.940494200706001
+    }
+   ],
+   "seconds": 19.1
+  }
+ ]
+}

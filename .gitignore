@@ -11,3 +11,6 @@ paper/*.toc
 paper/*.synctex.gz
 paper/*.fls
 paper/*.fdb_latexmk
+
+# MNIST cache
+data/

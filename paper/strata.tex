@@ -574,6 +574,21 @@ adaptive floor. Fix: statistics freeze during transitions (the same law as
 centroids and claim statistics). \emph{Revalidation passed}: 16 columns for
 16 families, matching a static-threshold control run
 (\S\ref{sec:scale48})\\
+\addlinespace
+External adjudication, stage 1 & The trichotomy decomposes forgetting on a
+benchmark we did not design (Split-MNIST, class-incremental; naive
+fine-tuning, EWC, SI, replay) & Any event passing all three exclusions, or
+$>$30\% of forgetting magnitude unattributed & Survived: 33/33 events
+attributed across two seeds; substrate recovery $=1.00$ on \emph{every}
+event (all forgetting parameter-carried in these baselines); basis
+alignment 0.65--0.92 against null floors $\le$0.37; timescale attributed
+on only 2/33 (at full data, $10\times$-slowed training still converges to
+the interfering solution). Disclosed per Amendment 2: every event had at
+least one vacuous layer, partially jamming the basis door to (c) on this
+architecture; the verdict rests chiefly on the fully-testable substrate
+exclusion. Prediction (b)'s candidate modes were structurally untestable
+here (plain-SGD MLPs carry no normalization or optimizer state); that is
+the CIFAR stage's question\\
 \bottomrule
 \end{tabular}
 \caption{The falsification record. Bold outcomes are failures of the
@@ -610,12 +625,13 @@ taxonomy that the composition exposed.
 We state these plainly. (1)~\textbf{Scale}: all results are at $d{=}24$,
 $\le$48 tasks, $\sim$300 symbols, linear readouts over fixed expansions;
 per-tick dynamics are interpreted, not optimized. (2)~\textbf{Benchmark
-ownership}: every bench was designed by us; there is no comparison against
-EWC, replay, or progressive networks on benchmarks we do not control. A
-pre-registered protocol for that comparison---including the interventional
-criterion for what observed forgetting would count as \emph{outside} the
-trichotomy, fixed before any external run---accompanies the code
-(\code{paper/preregistration.md}).
+ownership}: the \strata\ benches were designed by us. The pre-registered
+external protocol (\code{paper/preregistration.md}) has now completed its
+first stage---Split-MNIST with standard baselines, reported in the
+falsification record---with the trichotomy surviving; the harness and
+hyperparameters were still ours, the architectures tested carry no
+normalization or optimizer state, and the Split-CIFAR stage with richer
+architectures remains open.
 (3)~\textbf{Depth}: one representation layer plus a two-layer routing
 hierarchy; whether the stability machinery composes through deep feature
 hierarchies is untested and is, in our judgment, the single most important

@@ -567,6 +567,27 @@ Three measured lessons from making it work:
 pytest
 ```
 
+## The adjudication (stage 1: complete)
+
+`python -m adjudication.run` executes the pre-registered external test
+([paper/preregistration.md](paper/preregistration.md)) on Split-MNIST
+(class-incremental) with standard baselines — naive fine-tuning, EWC, SI,
+replay — each instrumented with the interventional probes in
+[probes/](probes/). Verdict across two seeds, criteria frozen before the
+run: **33/33 forgetting events attributed within the trichotomy; the (c)
+criterion did not fire; unattributed forgetting 0.000** (bar: 30%).
+Substrate recovery was 1.00 on every event (in these baselines, all
+forgetting is parameter-carried); basis alignment ran 0.65–0.92 against
+null floors ≤ 0.37; timescale was attributed on only 2/33 — at full data,
+10×-slowed training still converges to the interfering solution.
+Mandatory disclosure: every event had at least one vacuous layer, so the
+basis route to (c) was partially jammed on this architecture — the
+verdict rests chiefly on the fully-testable substrate exclusion. The
+registered candidate modes (normalization-statistics drift, optimizer
+state) were structurally untestable on plain-SGD MLPs; that is the
+Split-CIFAR stage's question. Full per-event records:
+[adjudication/results/](adjudication/results/).
+
 ## Provenance
 
 This project was developed by Christopher Gardner in interactive research
